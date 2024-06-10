@@ -2,6 +2,7 @@ import boto3
 import pandas as pd
 import numpy
 import csv
+import re
 #from data_extraction import DataExtractor
 #from database_utils import DatabaseConnector
 
@@ -44,6 +45,61 @@ class DataCleaning:
         #df = df[df['user_uuid'] != '']
 
         return df2
+    
+    def clean_card_data(self,df):
+        # Fix incorrectly typed values
+        df = df.dropna(how='all')
+        # Define regex patterns for validation
+        card_number_pattern = re.compile(r'^\d{13,19}$')
+        expiry_date_pattern = re.compile(r'^\d{2}/\d{2}$')
+        date_format = '%Y-%m-%d'   
+
+        # Ensure card_number is treated as a string
+        df['card_number'] = df['card_number'].astype(str)
+
+        def validate_card_number(card_number):
+            return bool(card_number_pattern.match(card_number.replace(' ', '')))
+        
+        def validate_expiry_date(expiry_date):
+            try:
+                month, year = map(int, expiry_date.split('/'))
+                return 1 <= month <= 12 and year >= 22  # Assuming '22' is the minimum valid year
+            except:
+                return False
+        
+        def validate_date(date_str):
+            try:
+                pd.to_datetime(date_str, format=date_format)
+                return True
+            except ValueError:
+                return False
+
+        # List to store indices of invalid rows
+        invalid_indices = []
+        
+        for idx, row in df.iterrows():
+            card_number = str(row['card_number']).replace(' ', '')
+            expiry_date = row['expiry_date']
+            date_payment_confirmed = row['date_payment_confirmed']
+            
+            if not validate_card_number(card_number) or not validate_expiry_date(expiry_date) or not validate_date(date_payment_confirmed):
+                invalid_indices.append(idx)
+
+        # Drop invalid rows
+        df.drop(invalid_indices, inplace=True)
+
+        # Reset index after cleaning
+        df.reset_index(drop=True, inplace=True)
+        
+
+        return df
+            
+
+
+
+
+
+
 
 
 #if __name__ == "__main__":

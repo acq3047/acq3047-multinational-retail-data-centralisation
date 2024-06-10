@@ -5,6 +5,7 @@ import csv
 from database_utils import DatabaseConnector
 from sqlalchemy import Table, MetaData
 import pandas as pd
+import tabula
 
 class DataExtractor:
     """
@@ -48,6 +49,12 @@ class DataExtractor:
         data = self.read_data_from_table(table_name)
         df = pd.DataFrame(data)
         return df
+    
+    def retrieve_pdf_data(self, link):
+        dfs_tabula = tabula.read_pdf(link, pages='all', multiple_tables=True)
+        dfs = pd.concat(dfs_tabula, ignore_index=True)
+        return dfs
+
          
 
 
