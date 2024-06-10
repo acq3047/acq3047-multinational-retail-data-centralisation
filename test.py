@@ -18,4 +18,29 @@ if __name__ == "__main__":
     print(cleaned_user_df)
 
     # Upload cleaned data to the dim_users table
+    print('Upload the dim_users table')
     connector.upload_to_db(cleaned_user_df, 'dim_users')
+
+    # Extract the pdf file
+    user_tabula = extractor.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')
+    print('Data extracted from the PDF')
+    print(user_tabula)
+
+    # Clean the pdf file
+    cleaner = DataCleaning()
+    cleaned_card_df = cleaner.clean_card_data(user_tabula)
+    print(cleaned_card_df)
+    print(cleaned_card_df.info())
+    print(cleaned_card_df.describe())
+    print(cleaned_card_df.head(100))
+
+    # Upload cleaned data to the dim_card_details table
+    print('Upload the dim_card_details table')
+    connector.upload_to_db(cleaned_card_df, 'dim_card_details')
+
+
+
+
+
+
+
