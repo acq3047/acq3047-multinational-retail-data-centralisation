@@ -1,11 +1,11 @@
 import boto3
-import pandas
 import numpy
 import csv
 from database_utils import DatabaseConnector
 from sqlalchemy import Table, MetaData
 import pandas as pd
 import tabula
+import requests
 
 class DataExtractor:
     """
@@ -54,6 +54,48 @@ class DataExtractor:
         dfs_tabula = tabula.read_pdf(link, pages='all', multiple_tables=True)
         dfs = pd.concat(dfs_tabula, ignore_index=True)
         return dfs
+    
+    def list_number_of_stores(self, endpoint, header):
+        """
+        Retrieves the number of stores from the API.
+
+        Parameters:
+        number_stores_endpoint (str): The API endpoint to get the number of stores.
+        headers (dict): The headers containing the API key for authorization.
+
+        Returns:
+        int: The number of stores.
+        """
+        response = requests.get(endpoint, headers=header)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        data = response.json()
+        return data['number_stores']
+        
+    def retrieve_stores_data(self, store_details_endpoint, header, num_stores):
+        """
+        Retrieves data for all stores from the API and saves it in a pandas DataFrame.
+
+        Parameters:
+        store_details_endpoint (str): The API endpoint to get store details.
+        headers (dict): The headers containing the API key for authorization.
+
+        Returns:
+        pandas.DataFrame: A DataFrame containing the data for all stores.
+        """
+        number_stores_endpoint = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores'
+        num_stores = self.list_number_of_stores(number_stores_endpoint, header)
+        # Initialize an empty list to store data
+        stores_data = []
+        for store in range(1, num_stores+1):
+            formatted_endpoint = store_details_endpoint.format(store_number=store)
+            response_retrieve = requests.get(formatted_endpoint, headers=header)
+            response_retrieve.raise_for_status()  # Raise an exception for HTTP errors
+            data = response_retrieve.json()  
+            stores_data.append(data)
+        stores_data_df = pd.DataFrame(stores_data)
+        return stores_data_df
+
+    
 
          
 
