@@ -93,6 +93,70 @@ class DataCleaning:
         
 
         return df
+    
+    def called_clean_store_data(self, df):
+        #df = df.dropna(how='all')
+        df = df.dropna(subset=['address','longitude','store_type', 'country_code', 'opening_date', 'continent',])
+        # Fix continent names
+        df['continent'] = df['continent'].replace({'eeEurope': 'Europe', 'eeAmerica': 'America'})
+        # Filter valid continents
+        #df = df[df['continent']].isin(['Europe', 'America'])
+        df = df[df['continent'].isin(['Europe', 'America'])]
+        # Filter invalid country codes
+        df = df[df['country_code'].apply(lambda x: isinstance(x, str) and len(x) == 2 and x.isupper())]
+        # Filter valid longitude and latitude
+        df['longitude'] = pd.to_numeric(df['longitude'], errors='coerce')
+        df = df.dropna(subset=['longitude'])
+        df['latitude'] = pd.to_numeric(df['latitude'], errors='coerce')
+        df = df.dropna(subset=['latitude'])
+        # Ensure lat is a float, fill NaN values with 0.0
+        df['lat'] = pd.to_numeric(df['lat'], errors='coerce').fillna(0.0)
+        # Remove store types and localities containing digits
+        df = df[~df['store_type'].str.contains(r'\d', na=False)]
+        df = df[~df['locality'].str.contains(r'\d', na=False)]
+
+        df.reset_index(drop=True, inplace=True)
+
+        #invalid_indices=[]
+        #for idx, row in df.iterrows():
+        #    continent= str(row['continent'])
+        #    latitude = row['latitude']
+        #    longitude = row['longitude']
+        #    country_code = str(row['country_code'])
+        #    store_type = str(row['store_type'])
+        #    locality = str(row['locality'])
+        #    if continent !='Europe' or continent !='America':
+        #        if continent=='eeEurope':
+        #            continent.str.replace('eeEurope', 'Europe')
+        #        elif continent=='eeAmerica':
+        #            continent.str.replace('eeAmerica', 'America')
+        #        else:
+        #            invalid_indices.append(idx)
+        #    if len(country_code) > 2:
+        #        invalid_indices.append(idx)
+        #    if longitude is not float:
+        #        invalid_indices.append(idx)
+        #    if bool(re.search(r'\d', store_type)) == True:
+        #        invalid_indices.append(idx)
+            
+        #    if bool(re.search(r'\d', locality)) == True:
+        #        invalid_indices.append(idx)
+            
+
+        
+        #invalid_indices = list(set(invalid_indices))
+                      
+        
+        #df.drop(invalid_indices, inplace=True)
+        # Reset index after cleaning
+        #df.reset_index(drop=True, inplace=True)
+
+        return df
+
+    
+            
+            
+
             
 
 
