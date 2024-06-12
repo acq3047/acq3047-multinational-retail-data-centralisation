@@ -84,16 +84,61 @@ class DataExtractor:
         """
         number_stores_endpoint = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores'
         num_stores = self.list_number_of_stores(number_stores_endpoint, header)
+        retrieve_a_store_endpoint = 'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details'
+        store_number = '451'
+        store_number=int(store_number)
+
+        #request_2= requests.get(f'{retrieve_a_store_endpoint}/{store_number}', headers=header)
+        #data = request_2.json()
+        #stores_data = []
+        #stores_data.append(data)
+        #stores_data_df = pd.DataFrame(stores_data)
+
         # Initialize an empty list to store data
         stores_data = []
-        for store in range(1, num_stores+1):
+        for store in range(num_stores):
             formatted_endpoint = store_details_endpoint.format(store_number=store)
             response_retrieve = requests.get(formatted_endpoint, headers=header)
             response_retrieve.raise_for_status()  # Raise an exception for HTTP errors
             data = response_retrieve.json()  
+            #response_2=requests.get(f'{'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details'}/{'store_number'}', headers=self.header_dict)
             stores_data.append(data)
         stores_data_df = pd.DataFrame(stores_data)
+        print(stores_data_df.head(5))
         return stores_data_df
+    
+    def extract_from_s3(self, s3_address):
+        s3= boto3.client('s3')
+        # Parse the S3 address
+        bucket_name, key = self.parse_s3_address(s3_address)
+        # Download the file from S3 to a temporary file
+        temp_file = 'C:/Users/acq30/OneDrive/Documents/AI Core VsCode/acq3047-multinational-retail-data-centralisation/products.csv'
+        s3.download_file(bucket_name, key, temp_file)
+        # Read the temporary file into a pandas DataFrame
+        df = pd.read_csv(temp_file)
+        return df
+
+    def parse_s3_address(self, s3_address):
+        """
+        Parses an S3 address into bucket name and key.
+
+        Parameters:
+        s3_address (str): The S3 address (e.g., 's3://bucket-name/file.csv').
+
+        Returns:
+        tuple: A tuple containing the bucket name and key.
+        """
+        if not s3_address.startswith('s3://'):
+            raise ValueError("Invalid S3 address. It should start with 's3://'.")
+        
+        s3_parts = s3_address.replace('s3://', '').split('/', 1)
+        bucket_name = s3_parts[0]
+        key = s3_parts[1]
+        
+        return bucket_name, key
+
+
+
 
     
 
@@ -122,3 +167,4 @@ class DataExtractor:
 #        print("User DataFrame:")
 #        print(user_df)
 #        print('keys', user_df.keys())
+
