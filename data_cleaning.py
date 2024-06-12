@@ -96,7 +96,7 @@ class DataCleaning:
     
     def called_clean_store_data(self, df):
         #df = df.dropna(how='all')
-        df = df.dropna(subset=['address','longitude','store_type', 'country_code', 'opening_date', 'continent',])
+        df = df.dropna(subset=['address','longitude','store_type', 'country_code', 'opening_date', 'continent'])
         # Fix continent names
         df['continent'] = df['continent'].replace({'eeEurope': 'Europe', 'eeAmerica': 'America'})
         # Filter valid continents
@@ -152,6 +152,61 @@ class DataCleaning:
         #df.reset_index(drop=True, inplace=True)
 
         return df
+    def convert_product_weights(self, df):
+        df = df.dropna(subset=['weight'])
+
+        """
+        Convert the weights in the DataFrame to a consistent unit (kg).
+        
+        Parameters:
+        df (pandas.DataFrame): The DataFrame containing product data with a 'weight' column.
+        
+        Returns:
+        pandas.DataFrame: The DataFrame with the 'weight' column converted to kg as a float.
+        """
+
+        def convert_weight(weight):
+            #weight = str(weight).lower().strip()
+            #weight = re.sub(r'[^\d.]+', '', weight)  # Remove all non-numeric characters except decimal point
+            if 'kg' in weight:
+                try:
+                    weight = weight.replace('kg','').strip()
+                    return float(weight)
+                except ValueError:
+                    return None
+            elif 'g' in weight:
+                try:
+                    weight = weight.replace('g','').strip()
+                    return float(weight)/1000 # Convert grams to kg
+                except ValueError:
+                    return None
+            elif 'ml' in weight:
+                try:
+                    weight = weight.replace('ml','').strip()
+                    return float(weight)/1000  # Assume ml is roughly equivalent to g, then convert to kg
+                except ValueError:
+                    return None
+            elif 'l' in weight:
+                 try:
+                    weight = weight.replaace('l', '').strip()
+                    return float(weight)  # Liters to kg (assuming 1L ~ 1kg for water-like substances)
+                 except ValueError:
+                     return None
+        
+        df['weight'] = df['weight'].apply(convert_weight)
+        return df
+    
+    def clean_products_data(self, df):
+        df = df.dropna(subset=['product_name','product_price','weight','category','EAN','date_added','uuid','removed','product_code'])
+        # Fix product_price errors
+        df = df[~df['product_price'].str.contains(r'[a-zA-Z]', na=False)]
+        # Fix availability errors
+        df = df[~df['removed'].str.contains(r'\d', na=False)]
+        # Fix category errors 
+        df = df[~df['category'].str.contains(r'\d', na=False)]
+        return df
+
+        
 
     
             
