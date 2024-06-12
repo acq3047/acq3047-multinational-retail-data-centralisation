@@ -93,6 +93,16 @@ if __name__ == "__main__":
     print('Upload the dim_store_details table')
     connector.upload_to_db(clean_api_df, 'dim_store_details')
     print('Uploaded successful')
+
+    # Extract product data from S3
+    s3_address = 's3://data-handling-public/products.csv'
+    try:
+        product_df = extractor.extract_from_s3(s3_address)
+        print("Extracted Product Data:")
+        print(product_df)
+        print(product_df.info())
+    except Exception as e:
+        print(f"An error occurred while extracting product data: {e}")
         
 
 
