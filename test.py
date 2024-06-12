@@ -61,38 +61,38 @@ if __name__ == "__main__":
     store_number_endpoint ='https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details/{store_number}'
       # Get the store number
     store_number =int(store_number)
-    #try:
-    #    store_number_df = extractor.retrieve_stores_data(store_number_endpoint, headers, number_of_stores)
-    #    print("Extracted Store Data:")
-    #    print(store_number_df)
-    #    print(store_number_df.info())
-    #    print(store_number_df['continent'].value_counts())
-    #    print(store_number_df['locality'].value_counts())
-    #    print(store_number_df['staff_numbers'].value_counts())
-    #    print(store_number_df['opening_date'].value_counts())
-    #    print(store_number_df['store_type'].value_counts())
+    try:
+        store_number_df = extractor.retrieve_stores_data(store_number_endpoint, headers, number_of_stores)
+        print("Extracted Store Data:")
+        print(store_number_df)
+        print(store_number_df.info())
+        print(store_number_df['continent'].value_counts())
+        print(store_number_df['locality'].value_counts())
+        print(store_number_df['staff_numbers'].value_counts())
+        print(store_number_df['opening_date'].value_counts())
+        print(store_number_df['store_type'].value_counts())
         
-    #except requests.exceptions.HTTPError as e:
-    #    print(f"HTTP error occurred: {e}")
-    #except Exception as e:
-    #    print(f"An error occurred: {e}")
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
     
     # Clean the API data
-    #clean_api = DataCleaning()
-    #clean_api_df = clean_api.called_clean_store_data(store_number_df)
-    #print(clean_api_df)
-    #print(clean_api_df.info())
-    #print(clean_api_df['continent'].value_counts())
-    #print(clean_api_df['locality'].value_counts())
-    #print(clean_api_df['staff_numbers'].value_counts())
-    #print(clean_api_df['opening_date'].value_counts())
-    #print(clean_api_df['store_type'].value_counts())
+    clean_api = DataCleaning()
+    clean_api_df = clean_api.called_clean_store_data(store_number_df)
+    print(clean_api_df)
+    print(clean_api_df.info())
+    print(clean_api_df['continent'].value_counts())
+    print(clean_api_df['locality'].value_counts())
+    print(clean_api_df['staff_numbers'].value_counts())
+    print(clean_api_df['opening_date'].value_counts())
+    print(clean_api_df['store_type'].value_counts())
 
     # Upload cleaned store data to the dim_store_details table
 
-    #print('Upload the dim_store_details table')
-    #connector.upload_to_db(clean_api_df, 'dim_store_details')
-    #print('Uploaded successful')
+    print('Upload the dim_store_details table')
+    connector.upload_to_db(clean_api_df, 'dim_store_details')
+    print('Uploaded successful')
 
     # Extract product data from S3
     s3_address = 's3://data-handling-public/products.csv'
