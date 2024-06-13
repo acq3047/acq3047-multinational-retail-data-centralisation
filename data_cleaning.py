@@ -197,6 +197,15 @@ class DataCleaning:
         return df
     
     def clean_products_data(self, df):
+        """
+        Clean the products data by removing the None vues and fixing errors in the data of ech column.
+        
+        Parameters:
+        df (pandas.DataFrame): The DataFrame containing user data to be cleaned.
+        
+        Returns:
+        pandas.DataFrame: The cleaned DataFrame.
+        """
         df = df.dropna(subset=['product_name','product_price','weight','category','EAN','date_added','uuid','removed','product_code'])
         # Fix product_price errors
         df = df[~df['product_price'].str.contains(r'[a-zA-Z]', na=False)]
@@ -204,6 +213,20 @@ class DataCleaning:
         df = df[~df['removed'].str.contains(r'\d', na=False)]
         # Fix category errors 
         df = df[~df['category'].str.contains(r'\d', na=False)]
+        return df
+    
+    def clean_orders_data(self, df):
+        """
+        Clean the data of the orders table by removing the first name, last name and 1 columns
+        to have the table in the correct form before uploading to the database.
+
+        Parameters:
+        df (pandas.DataFrame): The DataFrame containing user data to be cleaned.
+        
+        Returns:
+        pandas.DataFrame: The cleaned DataFrame.
+        """
+        df.drop(columns =['first_name', 'last_name', '1'], inplace = True)
         return df
 
         
