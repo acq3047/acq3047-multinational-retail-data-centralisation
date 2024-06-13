@@ -126,13 +126,45 @@ if __name__ == "__main__":
     print('Cleaned product data')
     print(cleaned_product_data_df)
     print(cleaned_product_data_df.info())
-    #print(cleaned_product_data_df['product_price'].value_counts())
+    print(cleaned_product_data_df['product_price'].value_counts())
 
     # Upload cleaned product data to the  dim_products table
 
-    #print('Upload the dim_store_details table')
+    print('Upload the dim_store_details table')
     connector.upload_to_db(cleaned_product_data_df, 'dim_products')
     print('Uploaded successful')
+
+    # list all the tables in the database to get the name of the table containing all information about the product orders.
+
+    print("Listing all tables in the database:")
+    tables_lst = connector.list_db_tables()
+    print(tables_lst)
+
+    #Extract the orders data using the read_rds_table method you create earlier returning a pandas DataFrame
+
+    print("Read the orders from the product table")
+    orders_data = extractor.read_rds_table('orders_table')
+    print(orders_data)
+    print(orders_data.info())
+
+    # Clean orders data
+
+    print('Removing the first_name, last_name and 1 colums')
+    clean_orders_data = cleaner.clean_orders_data(orders_data)
+    print(clean_orders_data)
+    print(clean_orders_data.info())
+
+    # Upload and store in a table called orders_table
+
+    print('Upload the orders_table')
+    order_connect = connector.upload_to_db(clean_orders_data, 'orders_table')
+    print('Uploaded successful')
+
+
+
+
+
+
 
 
 
