@@ -108,6 +108,15 @@ class DataExtractor:
         return stores_data_df
     
     def extract_from_s3(self, s3_address):
+        """
+        Downloads a CSV file from an S3 bucket and returns it as a pandas DataFrame.
+
+        Parameters:
+        s3_address (str): The S3 address of the CSV file (e.g., 's3://bucket-name/file.csv').
+
+        Returns:
+        pandas.DataFrame: The DataFrame containing the data from the CSV file.
+        """
         s3= boto3.client('s3')
         # Parse the S3 address
         bucket_name, key = self.parse_s3_address(s3_address)
@@ -136,8 +145,21 @@ class DataExtractor:
         key = s3_parts[1]
         
         return bucket_name, key
+    def extract_json_from_s3(self, s3_address):
+        """
+        Downloads a JSON file from an S3 bucket and returns it as a pandas DataFrame.
 
+        Parameters:
+        s3_address (str): The S3 URL addresss.
 
+        Returns:
+        pandas.DataFrame: The DataFrame containing the data from the JSON file.
+        """
+        response = requests.get(s3_address)
+        response.raise_for_status()
+        data = response.json()
+        df = pd.DataFrame(data)
+        return df
 
 
     
