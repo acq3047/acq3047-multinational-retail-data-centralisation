@@ -160,6 +160,50 @@ if __name__ == "__main__":
     order_connect = connector.upload_to_db(clean_orders_data, 'orders_table')
     print('Uploaded successful')
 
+    # Extract date details data from S3
+
+    s3_json_address = 'https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json'
+
+    try:
+        date_df = extractor.extract_json_from_s3(s3_json_address)
+        print("Extracted Product Data:")
+        print(date_df)
+        print(date_df.head(10))
+        print(date_df.keys())
+        print(date_df.info())
+        print(date_df['timestamp'].value_counts())
+        print(date_df['month'].value_counts())
+        print(date_df['year'].value_counts())
+        print(date_df['day'].value_counts())
+        print(date_df['time_period'].value_counts())
+        print(date_df['date_uuid'].value_counts())
+        
+    except Exception as e:
+        print(f"An error occurred while extracting product data: {e}")
+    
+    # Clean the date  table
+
+    print('Cleaning the date data')
+    clean_date_df = cleaner.clean_date_data(date_df)
+    print(clean_date_df)
+    print(clean_date_df.info())
+    print(clean_date_df['month'].value_counts())
+    print(clean_date_df['timestamp'].value_counts())
+    print(clean_date_df['time_period'].value_counts())
+    print('Database successfully clean')
+
+    # Upload the data to the database naming the table dim_date_times.
+    print('Upload the date data')
+    date_connect = connector.upload_to_db(clean_date_df, 'dim_date_times')
+    print('Uploaded successful')
+
+    
+
+
+
+
+
+
 
 
 
