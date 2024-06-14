@@ -226,8 +226,32 @@ class DataCleaning:
         Returns:
         pandas.DataFrame: The cleaned DataFrame.
         """
-        df.drop(columns =['first_name', 'last_name', '1'], inplace = True)
+        df.drop(columns = ['first_name', 'last_name', '1'], inplace = True)
         return df
+    
+    def clean_date_data(self,df):
+        """
+        Clean the data of the date table in order of 
+        having the table in the correct form before uploading to the database.
+
+        Parameters:
+        df (pandas.DataFrame): The DataFrame containing user data to be cleaned.
+        
+        Returns:
+        pandas.DataFrame: The cleaned DataFrame.
+        """
+        # Drop all rows containing null values in the following columns
+        df = df.dropna(subset = ['timestamp','month','year','day','time_period','date_uuid'])
+        # Fix month errors
+        df = df[~df['month'].str.contains(r'[a-zA-Z]', na=False)]
+        # Fix year errors
+        df = df[~df['year'].str.contains(r'[a-zA-Z]', na=False)]
+        # Fix day errors
+        df = df[~df['day'].str.contains(r'[a-zA-Z]', na=False)]
+        # Fix time_period erors
+        df = df[~df['time_period'].str.contains(r'\d', na=False)]
+        return df
+
 
         
 
