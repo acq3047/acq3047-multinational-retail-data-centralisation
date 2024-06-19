@@ -114,6 +114,9 @@ class DataCleaning:
         # Remove store types and localities containing digits
         df = df[~df['store_type'].str.contains(r'\d', na=False)]
         df = df[~df['locality'].str.contains(r'\d', na=False)]
+        # Remove staff_numbers and opening_date containing letters
+        df = df[~df['staff_numbers'].str.contains(r'[a-zA-Z]', na=False)]
+        df = df[~df['opening_date'].str.contains(r'[a-zA-Z]', na=False)]
 
         df.reset_index(drop=True, inplace=True)
 
