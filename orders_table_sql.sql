@@ -44,14 +44,14 @@ ALTER TABLE orders_table
 ADD CONSTRAINT fk_orders_date FOREIGN KEY (date_uuid) REFERENCES dim_date_times(date_uuid) -- Create foreign key constraint for user_uuid
 ALTER TABLE orders_table
 ADD CONSTRAINT fk_orders_user FOREIGN KEY (user_uuid) REFERENCES dim_users(user_uuid);
-ALTER TABLE orders_table DROP CONSTRAINT fk_orders_user;
+DROP CONSTRAINT -- ALTER TABLE orders_table DROP CONSTRAINT fk_orders_user;
 -- Create foreign key constraint for card_number
 ALTER TABLE orders_table
 ADD CONSTRAINT fk_orders_card FOREIGN KEY (card_number) REFERENCES dim_card_details(card_number);
 SELECT *
 FROM orders_table
 WHERE date_uuid NOT IN(
-        SELECT ?
+        SELECT
         FROM dim_date_times.date_uuid
         FROM dim_date_times
     );
@@ -75,3 +75,6 @@ WHERE date_uuid NOT IN(
         SELECT dim_date_times.date_uuid
         FROM dim_date_times
     );
+-- Foreighn key of store data
+ALTER TABLE orders_table
+ADD CONSTRAINT fk_orders_store FOREIGN KEY (store_code) REFERENCES dim_store_details (store_code);
