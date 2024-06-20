@@ -10,10 +10,17 @@
     - [Task 4: Extract and clean the details of each store](#task-4-extract-and-clean-the-details-of-each-store)
     - [Task 5: Extract and clean the product data](#task-5-extract-and-clean-the-product-data)
     - [Task 8: Retrieve and clean the date events data](#task-8-retrieve-and-clean-the-date-events-data)
+4. [Milestone 3: Create the database schema](#milestone-3-create-the-database-schema)
+    -[Task 1: Cast the columns of the orders_table to the correct data types](#task-1-cast-the-columns-of-the-orders_table-to-the-correct-data-types)
+    -[Task 2: Cast the columns of the dim_users to the correct data types](#task-2-cast-the-columns-of-the-dim_users-to-the-correct-data-types)
+    -[Task 3: Update the dim_store_details table](#task-3-update-the-dim_store_details-table)
+    -[Task 4: Make changes to the dim_products table for the delivery team and update the data types](#task-4-make-changes-to-the-dim_products-table-for-the-delivery-team-and-update-the-data-types)
+    -[Task 5: Update the dim_date_times table](#task-5-update-the-dim_date_times-table)
+    -[Task 6: Update the dim_card_details table](#task-6-update-the-dim_card_details-table)
+    -[Task 7: Create the prymary keys in the dimension tables](#task-7-create-the-prymary-keys-in-the-dimension-tables)
+    -[Task 8: Add the foreign keys to the orders table](#task-8-add-the-foreign-keys-to-the-orders-table)
 4. [Document your project](#document-your-project)
 5. [License](#license)
-
-
 
 
 ## Description
@@ -48,6 +55,9 @@ In this section, we will outline the necessary instructions for running the proj
 ***Python version***
 - Python version: Python 3.7 or higher
 
+***SQL version**
+- PostgreSQL
+- pgADMIN 4
 ***Packages***
 - boto3
 - yaml
@@ -3221,8 +3231,302 @@ if __name__ == "__main__":
     date_connect = connector.upload_to_db(clean_date_df, 'dim_date_times')
     print('Uploaded successful')
 ```
+## Milestone 3: Create the database schema
 
-### Document your project
+In this milestone, we proceed to develop the star-based schema of the database, ensuring that the columns are of the correct data types.
+
+### Task 1: Cast the columns of the orders_table to the correct data types
+
+In this task, we proceed to ensure that the columns of the **orders_table** is in the correct data type as shown in the following image along with identify the maximum length of the values with the ***?*** in the **VARCHAR** data type.
+
+![alt text](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/orders_table_sql.png)
+
+```sql
+-- The ? in VARCHAR should be replaced with an integer representing the maximum length of the values in that column. 
+-- Find the maximum length of 'card_number'
+-- Ensure the columns are of type TEXT
+ALTER TABLE orders_table
+ALTER COLUMN card_number TYPE TEXT USING card_number::TEXT;
+ALTER TABLE orders_table
+ALTER COLUMN store_code TYPE TEXT USING store_code::TEXT;
+ALTER TABLE orders_table
+ALTER COLUMN product_code TYPE TEXT USING product_code::TEXT;
+-- Find the maximum lengths
+SELECT MAX(LENGTH(card_number)) AS max_length_card_number
+FROM orders_table;
+SELECT MAX(LENGTH(store_code)) AS max_length_store_code
+FROM orders_table;
+SELECT MAX(LENGTH(product_code)) AS max_length_product_code
+FROM orders_table;
+-- Alter the 'card_number' column to VARCHAR with the appropriate length
+ALTER TABLE orders_table
+ALTER COLUMN card_number TYPE VARCHAR(19);
+-- Alter the 'store_code' column to VARCHAR with the appropriate length
+ALTER TABLE orders_table
+Alter COLUMN store_code TYPE VARCHAR(12);
+-- Alter the 'product_code' column to VARCHAR with the appropriate length
+ALTER TABLE orders_table
+ALTER COLUMN product_code TYPE VARCHAR(11);
+-- Alter the 'date_uuid' column to UUID
+ALTER TABLE orders_table
+ALTER COLUMN date_uuid TYPE UUID USING date_uuid::UUID;
+-- Alter the 'user_uuid' column to UUID
+ALTER TABLE orders_table
+ALTER COLUMN user_uuid TYPE UUID USING user_uuid::UUID;
+-- Alter the 'product_quantity' column to SMALLINT
+ALTER TABLE orders_table
+ALTER COLUMN product_quantity TYPE SMALLINT;
+```
+### Task 2: Cast the columns of the dim_users to the correct data types
+
+In this task, we proceed to ensure that the columns of the **dim_users** is in the correct data type as shown in the following image along with identify the maximum length of the values with the ***?*** in the **VARCHAR** data type.
+
+![alt text](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/dim_users_data_type.png)
+
+```sql
+-- Assign the maximum lenght of the country_code
+-- Ensure the columns are of type TEXT 
+ALTER TABLE dim_users
+ALTER COLUMN country_code TYPE TEXT USING country_code::TEXT;
+-- Find the maximum length of country code
+SELECT MAX(LENGTH(country_code)) as max_length_country_code
+FROM dim_users;
+-- Fix the country_code data type
+ALTER TABLE dim_users
+ALTER COLUMN country_code TYPE VARCHAR(2);
+-- Fix the first name data type
+ALTER TABLE dim_users
+ALTER COLUMN first_name TYPE VARCHAR(255);
+-- Fix the last name data type
+Alter TABLE dim_users
+ALTER COLUMN last_name TYPE VARCHAR(255);
+-- Fix the date of birth data type
+ALTER TABLE dim_users
+ALTER COLUMN date_of_birth TYPE DATE USING date_of_birth::DATE;
+-- Fix the user_uuid data type
+ALTER TABLE dim_users
+ALTER COLUMN user_uuid TYPE UUID USING user_uuid::UUID;
+-- Fix the join date data type
+ALTER TABLE dim_users
+ALTER COLUMN join_date TYPE DATE USING join_date::DATE;
+```
+### Task 3: Update the dim_store_details table
+
+In this task, we proceed to ensure that the columns of the **dim_store_details** is in the correct data type as shown in the following image along with identify the maximum length of the values with the ***?*** in the **VARCHAR** data type.
+
+![alt type](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/dim_store_details_data_types.png)
+
+```sql
+-- Fix the longitude data type
+ALTER TABLE dim_store_details
+ALTER COLUMN longitude TYPE FLOAT USING longitude::FLOAT;
+-- Fix the locality data type
+ALTER TABLE dim_store_details
+ALTER COLUMN locality TYPE VARCHAR(255);
+-- Fix the store code data type
+SELECT MAX(LENGTH(store_code)) AS max_length_store_code
+FROM dim_store_details;
+ALTER TABLE dim_store_details
+ALTER COLUMN store_code TYPE VARCHAR(12);
+-- Fix the staff numbers data type
+ALTER TABLE dim_store_details
+ALTER COLUMN staff_numbers TYPE SMALLINT USING staff_numbers::SMALLINT;
+-- Fix the opening date data type
+ALTER TABLE dim_store_details
+ALTER COLUMN opening_date TYPE DATE USING opening_date::DATE;
+-- Fix the store type data type
+ALTER TABLE dim_store_details
+ALTER COLUMN store_type TYPE VARCHAR(255);
+-- Fix the latitude data type
+ALTER TABLE dim_store_details
+ALTER COLUMN latitude TYPE FLOAT USING latitude::FLOAT;
+-- Fix the country code data type
+SELECT MAX(LENGTH(country_code)) AS max_length_country_code
+FROM dim_store_details;
+ALTER TABLE dim_store_details
+ALTER COLUMN country_code TYPE VARCHAR(2);
+-- Fix the continent data type
+ALTER TABLE dim_store_details
+ALTER COLUMN continent TYPE VARCHAR(255);
+```
+### Task 4: Make changes to the dim_products table for the delivery team and update the data types
+
+In this task, we will need to do some work on the **dim_products** products table before casting the data types correctly.
+The product_price column has a ***£*** character which you need to remove using SQL.
+The team that handles the deliveries would like a new human-readable column added for the weight so they can quickly make decisions on delivery weights.
+Add a new column weight_class which will contain human-readable values based on the weight range of the product.
+After all the columns are created and cleaned, change the data types of the products table.
+You will want to rename the removed column to still_available before changing its data type.
+
+
+![alt text](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/dim_products_data_types.png)
+![alt text](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/dim_products_dtypes.png)
+
+```sql
+--- The product_price column has a £ character which you need to remove using SQL.
+UPDATE dim_products
+SET product_price = REPLACE(product_price, '£', '');
+--- Add a new column weight_class which will contain human-readable values based on the weight range of the product.
+ALTER TABLE dim_products
+ADD COLUMN weight_class VARCHAR;
+UPDATE dim_products
+SET weight_class = CASE
+        WHEN weight < 2 THEN 'Light'
+        WHEN weight >= 2
+        AND weight < 40 THEN 'Mid_Sized'
+        WHEN weight >= 40
+        AND weight < 140 THEN 'Heavy'
+        ELSE 'Truck_Required'
+    END;
+/*
+ After all the columns are created and cleaned, change the data types of the products table.
+ 
+ You will want to rename the removed column to still_available before changing its data type.
+ 
+ Make the changes to the columns to cast them to the following data types:
+ */
+-- Fix the product price data type
+ALTER TABLE dim_products
+ALTER COLUMN product_price TYPE FLOAT USING product_price::FLOAT;
+-- Fix the weight data type
+ALTER TABLE dim_products
+ALTER COLUMN weight TYPE FLOAT USING weight::FLOAT;
+-- Fix the EAN data type
+SELECT MAX(LENGTH("EAN")) AS max_length_EAN
+FROM dim_products;
+ALTER TABLE dim_products
+ALTER COLUMN "EAN" TYPE VARCHAR(17);
+-- Fix the product_code data type
+SELECT MAX(LENGTH(product_code)) AS max_length_product_code
+FROM dim_products;
+ALTER TABLE dim_products
+ALTER COLUMN product_code TYPE VARCHAR(11);
+-- Fix the date_added data type
+ALTER TABLE dim_products
+ALTER COLUMN date_added TYPE DATE USING date_added::DATE;
+-- Fix the uuid data type
+ALTER TABLE dim_products
+ALTER COLUMN uuid TYPE UUID USING uuid::UUID;
+-- FIX the weight_class data type
+SELECT MAX(LENGTH(weight_class)) AS max_length_weight_class
+FROM dim_products;
+ALTER TABLE dim_products
+ALTER COLUMN weight_class TYPE VARCHAR(14);
+-- Chnge the name of removed to still_available Fix the still_avaliable data type
+ALTER TABLE dim_products
+    RENAME removed TO still_available;
+UPDATE dim_products
+SET still_available = CASE
+        WHEN still_available = 'Still_avaliable' THEN TRUE
+        ELSE FALSE
+    END;
+ALTER TABLE dim_products
+ALTER COLUMN still_available TYPE BOOLEAN USING still_available::BOOLEAN;
+```
+### Task 5: Update the dim_date_times table
+
+In this task, we proceed to ensure that the columns of the **dim_date_times** is in the correct data type as shown in the following image along with identify the maximum length of the values with the ***?*** in the **VARCHAR** data type.
+
+![alt text](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/dim_date_times_table.png)
+
+```sql
+-- Fix the month data type
+SELECT MAX(LENGTH(month)) AS max_length_month
+FROM dim_date_times;
+ALTER TABLE dim_date_times
+ALTER COLUMN month TYPE VARCHAR(2);
+-- Fix the year data type
+SELECT MAX(LENGTH(year)) AS max_length_year
+FROM dim_date_times;
+ALTER TABLE dim_date_times
+ALTER COLUMN year TYPE VARCHAR(4);
+-- Fix the day data type
+SELECT MAX(LENGTH(day)) AS max_length_day
+FROM dim_date_times;
+ALTER TABLE dim_date_times
+ALTER COLUMN day TYPE VARCHAR(2);
+-- Fix the time period data type
+SELECT MAX(LENGTH(time_period)) AS max_length_time_period
+FROM dim_date_times;
+ALTER TABLE dim_date_times
+ALTER COLUMN time_period TYPE VARCHAR(10);
+-- Fix the date_uuid period data type
+ALTER TABLE dim_date_times
+ALTER COLUMN date_uuid TYPE UUID USING date_uuid::UUID;
+```
+### Task 6: Update the dim_card_details table
+
+In this task, we proceed to ensure that the columns of the **dim_card_details** is in the correct data type as shown in the following image along with identify the maximum length of the values with the ***?*** in the **VARCHAR** data type.
+
+![alt text](https://github.com/acq3047/acq3047-multinational-retail-data-centralisation/blob/main/dim_card_details_table.png)
+
+```sql
+-- Fix the card number data type
+SELECT MAX(LENGTH(card_number)) AS max_length_card_number
+FROM dim_card_details;
+ALTER TABLE dim_card_details
+ALTER COLUMN card_number TYPE VARCHAR(19);
+-- Fix the expiry_date data type
+SELECT MAX(LENGTH(expiry_date)) AS max_length_expiry_date
+FROM dim_card_details;
+ALTER TABLE dim_card_details
+ALTER COLUMN expiry_date TYPE VARCHAR(5);
+-- Fix the date_payment_confirmed data type
+ALTER TABLE dim_card_details
+ALTER COLUMN date_payment_confirmed TYPE DATE USING date_payment_confirmed::DATE;
+```
+### Task 7: Create the prymary keys in the dimension tables
+
+Now that the tables have the appropriate data types we can begin adding the primary keys to each of the tables prefixed with dim.
+Each table will serve the **orders_table** which will be the single source of truth for our orders.
+Check the column header of the orders_table you will see all but one of the columns exist in one of our tables prefixed with dim.
+We need to update the columns in the dim tables with a primary key that matches the same column in the orders_table.
+Using SQL, update the respective columns as primary key columns.
+
+```sql
+ALTER TABLE dim_date_times
+ADD PRIMARY KEY (date_uuid);
+
+ALTER TABLE dim_users
+ADD PRIMARY KEY (user_uuid);
+
+ALTER TABLE dim_card_details
+ADD PRIMARY KEY (card_number);
+
+ALTER TABLE dim_store_details
+ADD PRIMARY KEY (store_code);
+
+ALTER TABLE dim_products
+ADD PRIMARY KEY (product_code);
+```
+### Task 8: Add the foreign keys to the orders table
+
+With the primary keys created in the tables prefixed with dim we can now create the foreign keys in the **orders_table** to reference the primary keys in the other tables.
+Use SQL to create those foreign key constraints that reference the primary keys of the other table.
+This makes the star-based database schema complete.
+
+```sql
+ALTER TABLE orders_table
+ADD CONSTRAINT fk_orders_date FOREIGN KEY (date_uuid)
+REFERENCES dim_date_times (date_uuid);
+
+ALTER TABLE orders_table
+ADD CONSTRAINT fk_orders_user FOREIGN KEY (user_uuid)
+REFERENCES dim_users (user_uuid);
+
+ALTER TABLE orders_table
+ADD CONSTRAINT fk_orders_card FOREIGN KEY (card_number)
+REFERENCES dim_card_details (card_number);
+
+ALTER TABLE orders_table
+ADD CONSTRAINT fk_orders_store FOREIGN KEY (store_code)
+REFERENCES dim_store_details (store_code);
+
+ALTER TABLE orders_table
+ADD CONSTRAINT fk_orders_product FOREIGN KEY (product_code)
+REFERENCES dim_products (product_code);
+```
+## Document your project
 
 In the subsequent section, we will address the procedure for updating your Readme file locally and subsequently pushing the modifications to your GitHub repository. It is essential to document your progress diligently following the completion of each milestone. This entails providing a comprehensive description of the milestones, outlining the completed tasks, and embedding the code developed for each task. Finally, you must stage and push the changes to your GitHub repository.
 
@@ -3232,6 +3536,6 @@ git commit -m "Your commit message"
 git push
 ```
 
-### License
+## License
 
 When this project's repository was initially established, it was deliberately left unlicensed. This decision allows users to utilize, adapt, and distribute the code without encountering any constraints or limitations.
