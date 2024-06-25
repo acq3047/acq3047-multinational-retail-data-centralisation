@@ -78,3 +78,16 @@ SELECT SUM(s.staff_numbers) AS total_staff_numbers,
 FROM dim_store_details s
 GROUP BY s.country_code
 ORDER BY total_staff_numbers DESC;
+-- Task 8: Which store type is nelling the most?
+SELECT *
+FROM orders_table
+SELECT SUM(p.product_price * o.product_quantity) AS total_sales,
+    s.store_type as store_type,
+    s.country_code as country_code
+FROM orders_table o
+    JOIN dim_products p ON o.product_code = p.product_code
+    JOIN dim_store_details s ON o.store_code = s.store_code
+WHERE s.country_code = 'DE'
+GROUP BY s.store_type,
+    s.country_code
+ORDER BY total_sales ASC;
