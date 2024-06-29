@@ -78,7 +78,7 @@ SELECT SUM(s.staff_numbers) AS total_staff_numbers,
 FROM dim_store_details s
 GROUP BY s.country_code
 ORDER BY total_staff_numbers DESC;
--- Task 8: Which store type is nelling the most?
+-- Task 8: Which store type is selling the most?
 SELECT *
 FROM orders_table
 SELECT SUM(p.product_price * o.product_quantity) AS total_sales,
@@ -91,3 +91,53 @@ WHERE s.country_code = 'DE'
 GROUP BY s.store_type,
     s.country_code
 ORDER BY total_sales ASC;
+-- Task 9: How quickly is the company making sales?
+WITH sales_with_lead AS (
+    SELECT o.date_uuid,
+        MAKE_DATE(
+            CAST(d.year AS INTEGER),
+            CAST(d.month AS INTEGER),
+            CAST(d.day AS INTEGER)
+        ) AS sale_date,
+        LEAD(
+            MAKE_DATE(
+                CAST(d.year AS INTEGER),
+                CAST(d.month AS INTEGER),
+                CAST(d.day AS INTEGER)
+            )
+        ) OVER (
+            PARTITION BY CAST(d.year AS INTEGER)
+            ORDER BY MAKE_DATE(
+                    CAST(d.year AS INTEGER),
+                    CAST(d.month AS INTEGER),
+                    CAST(d.day AS INTEGER)
+                )
+        ) AS next_date,
+        CAST(d.year AS INTEGER) AS year
+    FROM orders_table o
+        JOIN dim_date_times d ON o.date_uuid = d.date_uuid
+),
+time_diffs AS (
+    SELECT year,
+        AVG((next_date - sale_date)) AS avg_time_diff_seconds
+    FROM sales_with_lead
+    WHERE next_date IS NOT NULL
+    GROUP BY year
+)
+SELECT year,
+    json_build_object(
+        'hours',
+        FLOOR(avg_time_diff_seconds / 3600),
+        'minutes',
+        FLOOR((avg_time_diff_seconds % 3600) / 60),
+        'seconds',
+        FLOOR(avg_time_diff_seconds % 60),
+        'milliseconds',
+        ROUND(
+            (
+                avg_time_diff_seconds - FLOOR(avg_time_diff_seconds)
+            ) * 1000
+        )
+    ) AS actual_time_taken
+FROM time_diffs
+ORDER BY year DESC;
