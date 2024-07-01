@@ -19,8 +19,18 @@
     -[Task 6: Update the dim_card_details table](#task-6-update-the-dim_card_details-table)
     -[Task 7: Create the prymary keys in the dimension tables](#task-7-create-the-prymary-keys-in-the-dimension-tables)
     -[Task 8: Add the foreign keys to the orders table](#task-8-add-the-foreign-keys-to-the-orders-table)
-4. [Document your project](#document-your-project)
-5. [License](#license)
+5. [Milestone 4: Querying the data](#milestone-4-querying-the-data)
+    - [Task 1: How many stores does the business have and in which countries?](#task-1-how-many-stores-the-company-have-and-in-which-countries)
+    - [Task 2: Which locations currently have the most stores?](#task-2-which-locations-currently-have-the-most)
+    - [Task 3: Which months produced the largest amount of sales?](#task-3-which-months-produced-the-largest-amount-of-sales)
+    - [Task 4: How many of sales are coming from online?](#task-4-how-many-of-sales-are-coming-from-online)
+    - [Task 5: What percentage of sales comes from each store type?](#task-5-what-percentage-of-sales-comes-from-each-store-type)
+    - [Task 6: Which month in each year produced the highest cost sales](#task-6-which-month-in-each-year-produced-the-highest-cost-sales)
+    - [Task 7: What is your staff headcount?](#task-7-what-is-your-staff-headcount)
+    - [Task 8: Which store type is selling the most?](#task-8-which-store-type-is-selling-the-most)
+    - [Task 9: How quickly is the company making sales?](#task-9-how-quickly-is-the-company-making-sales)
+6. [Document your project](#document-your-project)
+7. [License](#license)
 
 
 ## Description
@@ -3526,6 +3536,195 @@ ALTER TABLE orders_table
 ADD CONSTRAINT fk_orders_product FOREIGN KEY (product_code)
 REFERENCES dim_products (product_code);
 ```
+
+## Milestone 4: Querying the data
+
+In this task. you have to start querying the data to get up to date metrics in order to get a better understanding of the sales' company from the database using **SQL**.
+
+### Task 1: How many stores does the business have and in which countries?
+The Operations team would like to know which countries we currently operate in and which country now has the most stores. Perform a query on the database to get the information.
+
+```sql
+SELECT country_code as country,
+    count(store_code) as total_no_stores
+FROM dim_store_details
+GROUP BY country_code
+ORDER BY total_no_stores DESC;
+```
+### Task 2: Which locations currently have the most?
+
+The business stakeholders would like to know which locations currently have the most stores.
+They would like to close some stores before opening more in other locations.
+Find out which locations have the most stores currently. 
+
+```sql
+SELECT locality,
+    count(store_code) as total_no_stores
+FROM dim_store_details
+GROUP BY locality
+ORDER BY total_no_stores DESC; 
+```
+### Task 3: Which months produced the largest amount of sales?
+
+Query the database to find out which months have produced the most sales.
+
+```sql
+SELECT d.month as month,
+    SUM(o.product_quantity) as total_sales,
+    SUM(p.product_price * o.product_quantity) as price
+FROM orders_table o
+    JOIN dim_date_times d ON o.date_uuid = d.date_uuid
+    JOIN dim_products p ON o.product_code = p.product_code
+GROUP BY month
+ORDER BY price DESC;
+```
+### Task 4: How many of sales are coming from online?
+
+The company is looking to increase its online sales.
+They want to know how many sales are happening online vs offline.
+Calculate how many products were sold and the amount of sales made for online and offline purchases.
+
+```sql
+SELECT count(o.product_quantity) AS product_quantity_count,
+    CASE
+        WHEN s.store_type = 'Website' THEN 'Web'
+        ELSE 'Offline'
+    END AS location,
+    --COUNT(s.store_type) as location,
+    SUM(p.product_price * o.product_quantity) as price
+FROM orders_table o
+    JOIN dim_products p ON o.product_code = p.product_code
+    JOIN dim_store_details s ON o.store_code = s.store_code
+GROUP BY location
+ORDER BY location;
+```
+
+### Task 5: What percentage of sales comes from each store type?
+
+The sales team wants to know which of the different store types is generated the most revenue so they know where to focus.
+Find out the total and percentage of sales coming from each of the different store types.
+
+```sql
+WITH total_sales_by_store_type AS (
+    SELECT s.store_type,
+        SUM(p.product_price * o.product_quantity) AS total_sales
+    FROM orders_table o
+        JOIN dim_products p ON o.product_code = p.product_code
+        JOIN dim_store_details s ON o.store_code = s.store_code
+    GROUP BY s.store_type
+),
+total_sales_all AS (
+    SELECT SUM(total_sales) AS grand_total_sales
+    FROM total_sales_by_store_type
+)
+SELECT ts.store_type,
+    ts.total_sales,
+    (ts.total_sales / ta.grand_total_sales * 100) AS percentage_total
+FROM total_sales_by_store_type ts,
+    total_sales_all ta
+ORDER BY ts.total_sales DESC;
+```
+### Task 6: Which month in each year produced the highest cost sales
+
+The company stakeholders want assurances that the company has been doing well recently.
+Find which months in which years have had the most sales historically.
+
+```sql
+SELECT SUM(p.product_price * o.product_quantity) AS total_sales,
+    d.year as year,
+    d.month as month
+FROM orders_table o
+    JOIN dim_date_times d ON o.date_uuid = d.date_uuid
+    JOIN dim_products p ON o.product_code = p.product_code
+GROUP BY d.year,
+    d.month
+ORDER BY total_sales DESC
+Limit 10;
+```
+### Task 7: What is your staff headcount?
+
+The operations team would like to know the overall staff numbers in each location around the world. Perform a query to determine the staff numbers in each of the countries the company sells in.
+
+```sql
+SELECT SUM(s.staff_numbers) AS total_staff_numbers,
+    s.country_code
+FROM dim_store_details s
+GROUP BY s.country_code
+ORDER BY total_staff_numbers DESC;
+```
+### Task 8: Which store type is selling the most?
+
+The sales team is looking to expand their territory in Germany. Determine which type of store is generating the most sales in Germany.
+
+```sql
+SELECT SUM(p.product_price * o.product_quantity) AS total_sales,
+    s.store_type as store_type,
+    s.country_code as country_code
+FROM orders_table o
+    JOIN dim_products p ON o.product_code = p.product_code
+    JOIN dim_store_details s ON o.store_code = s.store_code
+WHERE s.country_code = 'DE'
+GROUP BY s.store_type,
+    s.country_code
+ORDER BY total_sales ASC;
+```
+### Task 9: How quickly is the company making sales?
+
+Sales would like the get an accurate metric for how quickly the company is making sales.
+Determine the average time taken between each sale grouped by year.
+
+```sql
+WITH sales_with_lead AS (
+    SELECT o.date_uuid,
+        MAKE_DATE(
+            CAST(d.year AS INTEGER),
+            CAST(d.month AS INTEGER),
+            CAST(d.day AS INTEGER)
+        ) AS sale_date,
+        LEAD(
+            MAKE_DATE(
+                CAST(d.year AS INTEGER),
+                CAST(d.month AS INTEGER),
+                CAST(d.day AS INTEGER)
+            )
+        ) OVER (
+            PARTITION BY CAST(d.year AS INTEGER)
+            ORDER BY MAKE_DATE(
+                    CAST(d.year AS INTEGER),
+                    CAST(d.month AS INTEGER),
+                    CAST(d.day AS INTEGER)
+                )
+        ) AS next_date,
+        CAST(d.year AS INTEGER) AS year
+    FROM orders_table o
+        JOIN dim_date_times d ON o.date_uuid = d.date_uuid
+),
+time_diffs AS (
+    SELECT year,
+        AVG((next_date - sale_date)) AS avg_time_diff_seconds
+    FROM sales_with_lead
+    WHERE next_date IS NOT NULL
+    GROUP BY year
+)
+SELECT year,
+    json_build_object(
+        'hours',
+        FLOOR(avg_time_diff_seconds / 3600),
+        'minutes',
+        FLOOR((avg_time_diff_seconds % 3600) / 60),
+        'seconds',
+        FLOOR(avg_time_diff_seconds % 60),
+        'milliseconds',
+        ROUND(
+            (
+                avg_time_diff_seconds - FLOOR(avg_time_diff_seconds)
+            ) * 1000
+        )
+    ) AS actual_time_taken
+FROM time_diffs
+ORDER BY year DESC;
+```
+
 ## Document your project
 
 In the subsequent section, we will address the procedure for updating your Readme file locally and subsequently pushing the modifications to your GitHub repository. It is essential to document your progress diligently following the completion of each milestone. This entails providing a comprehensive description of the milestones, outlining the completed tasks, and embedding the code developed for each task. Finally, you must stage and push the changes to your GitHub repository.
